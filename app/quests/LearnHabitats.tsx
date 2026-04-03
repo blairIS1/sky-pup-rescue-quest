@@ -6,6 +6,7 @@ import { sfxCorrect, sfxWrong, sfxTap } from "./sfx";
 import { speak, stopSpeaking } from "./speak";
 import { VOICE } from "./voice";
 import Confetti from "./Confetti";
+import { useSpeakLock } from "./useSpeakLock";
 
 export default function LearnHabitats({ onComplete }: { onComplete: (data: TrainingData) => void }) {
   const [items] = useState(() => [...TRAIN_ITEMS].sort(() => Math.random() - 0.5));
@@ -15,6 +16,7 @@ export default function LearnHabitats({ onComplete }: { onComplete: (data: Train
   const [mood, setMood] = useState<"idle" | "happy" | "scared">("idle");
   const [showConfetti, setShowConfetti] = useState(false);
   const [done, setDone] = useState(false);
+  const locked = useSpeakLock();
 
   useEffect(() => { speak(VOICE.q1Start); return () => { stopSpeaking(); }; }, []);
 
@@ -46,7 +48,7 @@ export default function LearnHabitats({ onComplete }: { onComplete: (data: Train
         <Confetti active={true} />
         <SkylarBuddy mood="celebrate" size={140} />
         <h2 className="text-3xl font-bold text-center">🎉 Great job!</h2>
-        <button className="btn btn-success text-xl px-8 py-4" onClick={() => { stopSpeaking(); sfxTap(); speak(VOICE.q1Learned); onComplete(training); }}>
+        <button className="btn btn-success text-xl px-8 py-4" disabled={locked} onClick={() => { sfxTap(); speak(VOICE.q1Learned); onComplete(training); }}>
           Next →
         </button>
       </div>
@@ -59,7 +61,7 @@ export default function LearnHabitats({ onComplete }: { onComplete: (data: Train
       <h2 className="text-2xl sm:text-3xl font-bold text-center">✈️ Where does it live?</h2>
       <SkylarBuddy mood={mood} size={100} />
       <div className="text-sm opacity-70">{idx + 1} / {items.length}</div>
-      <div className="progress-track w-48"><div className="progress-fill" style={{ width: `${(idx / items.length) * 100}%` }} /></div>
+      <div className="progress-track w-48"><div className="progress-fill" style={{ width: `${((idx + 1) / items.length) * 100}%` }} /></div>
       <div style={{ fontSize: "5rem" }}>{current.emoji}</div>
       <div className="text-2xl font-bold">{current.label}</div>
       <div className="text-xl min-h-[2em] font-semibold text-center">{feedback}</div>
@@ -67,7 +69,7 @@ export default function LearnHabitats({ onComplete }: { onComplete: (data: Train
         <div className="flex gap-4 justify-center fade-in">
           {cats.map(([key, { emoji, label }]) => (
             <button key={key} className="btn text-xl px-6 py-5" style={{ minWidth: 100, minHeight: 80 }}
-              onClick={() => { stopSpeaking(); sfxTap(); answer(key); }}>
+              disabled={locked} onClick={() => { sfxTap(); answer(key); }}>
               <div className="text-3xl">{emoji}</div>
               <div className="text-sm mt-1">{label}</div>
             </button>

@@ -6,6 +6,7 @@ import { sfxCorrect, sfxTap, sfxCelebrate } from "./sfx";
 import { speak, stopSpeaking } from "./speak";
 import { VOICE } from "./voice";
 import Confetti from "./Confetti";
+import { useSpeakLock } from "./useSpeakLock";
 
 const STEPS = [
   { label: "🚁 Taking off!", desc: "Up, up, and away!", voice: VOICE.q5Step1 },
@@ -19,6 +20,7 @@ export default function FinalFlight({ training, onComplete }: { training: Traini
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const [auto, setAuto] = useState(false);
+  const locked = useSpeakLock();
 
   useEffect(() => { speak(VOICE.q5Start); return () => { stopSpeaking(); }; }, []);
 
@@ -42,7 +44,7 @@ export default function FinalFlight({ training, onComplete }: { training: Traini
         <SkylarBuddy mood="celebrate" size={180} />
         <h2 className="text-3xl font-bold text-center">🎉 All Animals Saved!</h2>
         <p className="text-xl opacity-80 text-center">You&apos;re Skylar&apos;s best friend!</p>
-        <button className="btn btn-success text-xl px-8 py-4 mt-4" onClick={() => { stopSpeaking(); sfxTap(); speak(VOICE.q5Learned); onComplete(); }}>
+        <button className="btn btn-success text-xl px-8 py-4 mt-4" disabled={locked} onClick={() => { sfxTap(); speak(VOICE.q5Learned); onComplete(); }}>
           🏠 Done!
         </button>
       </div>
@@ -66,7 +68,7 @@ export default function FinalFlight({ training, onComplete }: { training: Traini
         {STEPS.slice(0, step + 1).map((s, i) => <div key={i}>✅ {s.label}</div>)}
       </div>
       {!auto ? (
-        <button className="btn btn-primary text-2xl px-10 py-5 mt-4" onClick={() => { stopSpeaking(); sfxTap(); setAuto(true); speak(VOICE.q5Launch).then(() => speak(STEPS[0].voice)); }}>
+        <button className="btn btn-primary text-2xl px-10 py-5 mt-4" disabled={locked} onClick={() => { sfxTap(); speak(VOICE.q5Launch).then(() => { speak(STEPS[0].voice); setAuto(true); }); }}>
           🚁 Let&apos;s Fly!
         </button>
       ) : (

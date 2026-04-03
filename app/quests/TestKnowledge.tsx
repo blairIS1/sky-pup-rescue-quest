@@ -6,6 +6,7 @@ import { sfxCorrect, sfxWrong, sfxTap } from "./sfx";
 import { speak, stopSpeaking } from "./speak";
 import { VOICE } from "./voice";
 import Confetti from "./Confetti";
+import { useSpeakLock } from "./useSpeakLock";
 
 export default function TestKnowledge({ training, onComplete }: { training: TrainingData; onComplete: (needsRetrain: boolean) => void }) {
   const [rounds] = useState(() => generateTestRounds(training));
@@ -15,6 +16,7 @@ export default function TestKnowledge({ training, onComplete }: { training: Trai
   const [mood, setMood] = useState<"thinking" | "happy" | "scared">("thinking");
   const [showConfetti, setShowConfetti] = useState(false);
   const [done, setDone] = useState(false);
+  const locked = useSpeakLock();
 
   useEffect(() => { speak(VOICE.q3Start); return () => { stopSpeaking(); }; }, []);
   const scene = rounds[idx];
@@ -36,10 +38,10 @@ export default function TestKnowledge({ training, onComplete }: { training: Trai
         <h2 className="text-3xl font-bold text-center">{needsRetrain ? "Let's practice more!" : "🎉 Great job!"}</h2>
         {needsRetrain ? (
           <div className="flex gap-3 mt-4">
-            <button className="btn text-lg px-6 py-4" style={{ background: "var(--accent)", color: "#1a0f2e" }} onClick={() => { stopSpeaking(); sfxTap(); speak(VOICE.q3Retrain); onComplete(true); }}>🔄 Learn Again</button>
-            <button className="btn text-lg px-6 py-4" onClick={() => { stopSpeaking(); sfxTap(); onComplete(false); }}>Continue →</button>
+            <button className="btn text-lg px-6 py-4" disabled={locked} style={{ background: "var(--accent)", color: "#1a0f2e" }} onClick={() => { sfxTap(); speak(VOICE.q3Retrain); onComplete(true); }}>🔄 Learn Again</button>
+            <button className="btn text-lg px-6 py-4" disabled={locked} onClick={() => { sfxTap(); onComplete(false); }}>Continue →</button>
           </div>
-        ) : <button className="btn btn-success text-xl px-8 py-4 mt-4" onClick={() => { stopSpeaking(); sfxTap(); speak(VOICE.q3Learned); onComplete(false); }}>Rescue Time! →</button>}
+        ) : <button className="btn btn-success text-xl px-8 py-4 mt-4" disabled={locked} onClick={() => { sfxTap(); speak(VOICE.q3Learned); onComplete(false); }}>Rescue Time! →</button>}
       </div>
     );
   }
@@ -64,7 +66,7 @@ export default function TestKnowledge({ training, onComplete }: { training: Trai
         <div className="flex gap-4 justify-center fade-in">
           {Object.entries(CAT_LABELS).map(([key, { emoji, label }]) => (
             <button key={key} className="btn text-xl px-6 py-5" style={{ minWidth: 100, minHeight: 80 }}
-              onClick={() => { stopSpeaking(); sfxTap(); choose(key); }}>
+              disabled={locked} onClick={() => { sfxTap(); choose(key); }}>
               <div className="text-3xl">{emoji}</div>
               <div className="text-sm mt-1">{label}</div>
             </button>

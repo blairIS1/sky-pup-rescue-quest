@@ -5,6 +5,7 @@ import SkylarBuddy from "./SkylarBuddy";
 import { sfxTap } from "./sfx";
 import { speak, stopSpeaking } from "./speak";
 import { VOICE } from "./voice";
+import { useSpeakLock } from "./useSpeakLock";
 
 export default function TrainingSummary({ training, onComplete }: { training: TrainingData; onComplete: () => void }) {
   const total = Object.values(training).reduce((a, b) => a + b, 0);
@@ -12,6 +13,7 @@ export default function TrainingSummary({ training, onComplete }: { training: Tr
   const maxCat = CATEGORIES.reduce((a, b) => ((training[a] || 0) > (training[b] || 0) ? a : b));
   const maxCount = training[maxCat] || 0;
   const isBiased = total > 0 && maxCount / total > 0.5;
+  const locked = useSpeakLock();
 
   useEffect(() => { speak(VOICE.summary).then(() => { if (isBiased) speak(VOICE.summaryBias); }); return () => { stopSpeaking(); }; }, [isBiased]);
 
@@ -48,7 +50,7 @@ export default function TrainingSummary({ training, onComplete }: { training: Tr
           <p className="text-sm opacity-80 mt-1">I know a lot about <b>{CAT_LABELS[maxCat].label}</b> but not the others!</p>
         </div>
       )}
-      <button className="btn btn-success text-xl px-8 py-4 mt-4" onClick={() => { stopSpeaking(); sfxTap(); speak(VOICE.summaryLearned); onComplete(); }}>
+      <button className="btn btn-success text-xl px-8 py-4 mt-4" disabled={locked} onClick={() => { sfxTap(); speak(VOICE.summaryLearned); onComplete(); }}>
         Test Me! →
       </button>
     </div>
